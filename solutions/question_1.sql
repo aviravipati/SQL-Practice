@@ -1,4 +1,5 @@
 
+
 with mean_tbl as (
 select d.CALDATE,count(*)
 from date d inner join sales s on s.dateid=d.dateid group by d.CALDATE)
@@ -15,8 +16,6 @@ from sales where STRFTIME('%Y-%m-%d', saletime) ='2008-09-09' group by dt) a,
 from sales where STRFTIME('%Y-%m-%d', saletime) ='2008-09-10' group by dt) b
 ;
 
-
-
 with venue_tbl as (
 select v.venuecity, count(s.salesid) as c
 from event e inner join 
@@ -29,18 +28,39 @@ select venuecity,RANK() OVER(order by c desc) as  rank from venue_tbl ) a
 where rank<=3
 ;
 
+SELECT count(DATEID)
+FROM(
+    SELECT DATEID, total_sales, cnt, (avg(total_sales) over ()) *0.25 as avg_sales_25, (avg(cnt) over ()) *0.25 as avg_cnt_25
+    FROM (
+            SELECT DATEID, SUM(QTYSOLD) as total_sales, count(salesid) as cnt
+            FROM SALES
+            GROUP BY DATEID
+            ) as t1
+)
+WHERE cnt<avg_cnt_25
+;
 
 
 select count(USERID) from users u inner JOIN
 
-
+select sellerid, username, (firstname ||' '|| lastname) as name,
+city, sum(qtysold)
+from sales, date, users
+where sales.sellerid = users.userid
+and sales.dateid = date.dateid
+and year = 2008
+and city = 'San Diego'
+group by sellerid, username, name, city
+order by 5 desc
+limit 5;
 
 
 --Consider the previous tables:
 --Hotel (Hotel_ID, Hotel_name, location)  
 --Rooms (Hotel_ID, Room_no, type, rent)
 
---Q. List all the hotel rooms and their rent from New York. Besides that, if rent is NULL, in place of price, replace it with the text “Not Available.”
+--Q. List all the hotel rooms and their rent from New York. 
+--Besides that, if rent is NULL, in place of price, replace it with the text “Not Available.”
 
 select H.Hotel_name, R.room_no, (CASE when R.rent is NULL then "Not Available" else R.rent END) as rent
 (select Hotel_ID,Hotel_name from Hotel H where location='New York') H inner join Rooms R on (R.Hotel_ID=H.Hotel_ID)

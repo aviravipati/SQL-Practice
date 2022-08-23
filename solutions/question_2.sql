@@ -1,3 +1,8 @@
+--How many days were there where the number of tickets sold was less than 25% of the mean?
+
+
+--What was the percent change in orders between September 9 & 10?
+
 select round(((b.c-a.c)*100)/a.c,1) as per_change from
 (select STRFTIME('%Y-%m-%d', saletime) as dt, cast(count(1) as flaot) as c 
 from sales where STRFTIME('%Y-%m-%d', saletime) ='2008-09-09' group by dt) a
@@ -5,6 +10,80 @@ join
 (select STRFTIME('%Y-%m-%d', saletime) as dt, cast(count(1) as float) as c
 from sales where STRFTIME('%Y-%m-%d', saletime) ='2008-09-10' group by dt) b
 on (1=1);
+
+--Find the top 3 cities for sales. [number of sales]
+select venuecity from (
+select v.venuecity, count(s.salesid) as number_of_sale from sales s join event e on (s.eventid=e.eventid) 
+join venue v on (e.venueid=v.venueid)
+group by v.venuecity
+order by 2 desc
+limit 3 ) a
+;
+
+--What was the top event in Los Angeles?
+--Note: Here top event means in terms of the overall price paid. 
+WITH event_rankings AS (
+	  -- Returns rankings of events by sales per city
+	  SELECT
+	    v.venuecity,
+	    e.eventid,
+	    e.eventname,
+	    SUM(pricepaid) AS total_paid
+		--,	    ROW_NUMBER() OVER (PARTITION BY v.venuecity ORDER BY SUM(pricepaid) DESC) AS rnk
+	  FROM event e
+	  JOIN sales s
+	    ON s.eventid = e.eventid
+	  JOIN venue v
+	    ON v.venueid = e.venueid
+      where  v.venuecity='Los Angeles'
+	  GROUP BY
+	    v.venuecity,
+	    e.eventid,
+	    e.eventname
+	  ORDER BY
+	  	 4 desc 
+	)
+	
+ SELECT
+	  *
+	FROM event_rankings
+	limit 1
+	;
+
+
+--How many users have bought a ticket to the category called 'Musicals'?
+select count(distinct buyerid) from event e join sales s 
+on e.eventid=s.eventid where catid in (
+select catid from category 
+where catname='Musicals' );
+
+
+--How many tickets were sold by resellers (someone who bought tickets
+--for an event and later sold tickets to that same event)?
+
+select sum(b.qtysold) from sales a inner join sales b on (a.buyerid=b.sellerid and a.eventid=b.eventid and a.saletime<b.saletime);
+
+SELECT SUM(s2.qtysold) AS total_ticktes_resold
+	  FROM sales s1
+	  JOIN sales s2
+	    -- Two sales for the same event
+	    ON s2.eventid = s1.eventid
+	      -- The second transaction happened after the frist
+	      AND s2.saletime > s1.saletime
+	      -- The seller of the second transaction was the buyer in the first transaction
+	      -- This means they're reselling the tickets
+	      AND s2.sellerid = s1.buyerid;
+
+--Which holiday had the most ticket sales?
+
+
+--How many buyer pairs have attended three or more events together?
+
+
+
+--How many users have bought tickets to an out-of-state event?
+
+
 
 
 select round(((((select count(dateid) from sales where dateid = 
@@ -53,10 +132,7 @@ event_venue e join sls  s
 on e.eventid = s.eventid
 order by sg desc limit 1;
 
-select count(distinct buyerid) from event e join sales s 
-on e.eventid=s.eventid where catid in (
-select catid from category 
-where catname='Musicals' );
+
 
 
  
