@@ -399,3 +399,68 @@ and a.sales_date < b.effective_end_date
 
 
 
+create table demo (startDate datetime);
+
+insert demo (startDate) values ('2015-04-10 3:46:07');
+insert demo (startDate) values ('2015-04-09 3:47:37');
+insert demo (startDate) values ('2015-04-08 3:48:07');
+insert demo (startDate) values ('2015-04-07 3:43:44');
+insert demo (startDate) values ('2015-04-06 3:39:08');
+insert demo (startDate) values ('2015-04-03 3:47:50');
+
+with start_date_tbl as
+(
+select '2015-04-10 3:46:07' as startDate
+UNION ALL
+select '2015-04-09 3:47:37'
+UNION ALL
+select '2015-04-08 3:48:07'
+UNION ALL
+select '2015-04-07 3:43:44'
+UNION ALL
+select '2015-04-06 3:39:08'
+)
+select   cast(startDate as time)   as avg_start_date
+from start_date_tbl
+
+;
+
+with countries as
+(
+select 'INC' as country 
+UNION ALL
+select 'USA' as country 
+UNION ALL
+select 'CHN' as country 
+UNION ALL
+select 'AFG' as country 
+UNION ALL
+select 'SRI' as country 
+UNION ALL
+select 'BNG' as country 
+)
+
+select a.country||"|"||b.country from countries 
+where a.country not in (select country from countries b)
+;
+
+
+
+WITH fruit_baskets as 
+(
+  SELECT
+    * 
+  FROM
+    UNNEST(
+      ARRAY<STRUCT<fruit ARRAY<STRING>,basket STRING>>[
+        (['bananas', 'apples', 'oranges'], 'basket 1'),
+        (['bananas', 'oranges'], 'basket 2'),
+        (['bananas', 'apples'], 'basket 3')
+      ]
+    )
+  AS fruit
+)
+
+SELECT * 
+FROM fruit_baskets 
+CROSS JOIN UNNEST(fruit) as fruit_unnest
